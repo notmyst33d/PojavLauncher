@@ -169,6 +169,7 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
                 zeroProgress();
                 boolean hasAuthlib = false;
                 for (final DependentLibrary libItem : verInfo.libraries) {
+                    Log.d("MinecraftDownloaderTask", "Downloading: " + libItem.name);
                     boolean needsRedirect = libItem.name.startsWith("com.mojang:authlib");
                     if (libItem.name.startsWith("com.mojang:authlib"))
                         hasAuthlib = true;
@@ -208,6 +209,7 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
                   verInfo.downloads != null) {
                     try {
                         String jarUrl = verInfo.downloads.values().toArray(new MinecraftClientInfo[0])[0].url;
+                        Log.d("MinecraftDownloaderTask", "Client JAR: " + jarUrl);
                         if (!hasAuthlib)
                             jarUrl = jarUrl.replace("http://", "https://").replace("https://launcher.mojang.com", "https://dresources.ralsei.cf");
                         Tools.downloadFileMonitored(

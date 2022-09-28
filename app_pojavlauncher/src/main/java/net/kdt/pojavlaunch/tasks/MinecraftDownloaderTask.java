@@ -167,8 +167,10 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
 
                 setMax(verInfo.libraries.length);
                 zeroProgress();
+                boolean hasAuthlib = false;
                 for (final DependentLibrary libItem : verInfo.libraries) {
-
+                    if (libItem.name.startsWith("com.mojang:authlib"))
+                        hasAuthlib = true;
                     if (
                         // libItem.name.startsWith("net.java.jinput") ||
                         libItem.name.startsWith("org.lwjgl")
@@ -181,7 +183,7 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
                         outLib.getParentFile().mkdirs();
 
                         if (!outLib.exists()) {
-                            downloadLibrary(libItem,libArtifact,outLib);
+                            downloadLibrary(libItem,libArtifact,outLib,libItem.name.startsWith("com.mojang:authlib"));
                         }else{
                             if(libItem.downloads != null && libItem.downloads.artifact != null && libItem.downloads.artifact.sha1 != null && !libItem.downloads.artifact.sha1.isEmpty()) {
                                 if(!Tools.compareSHA1(outLib,libItem.downloads.artifact.sha1)) {
@@ -204,8 +206,11 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
                 if ((!minecraftMainFile.exists() || minecraftMainFile.length() == 0l) &&
                   verInfo.downloads != null) {
                     try {
+                        String jarUrl = verInfo.downloads.values().toArray(new MinecraftClientInfo[0])[0].url;
+                        if (hasAuthlib)
+                            jarUrl = jarUrl.replace("http://", "https://").replace("https://launcher.mojang.com", "https://dresources.ralsei.cf");
                         Tools.downloadFileMonitored(
-                            verInfo.downloads.values().toArray(new MinecraftClientInfo[0])[0].url,
+                            jarUrl,
                             minecraftMainJar,
                                 new Tools.DownloaderFeedback() {
                                     @Override
@@ -296,6 +301,9 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
         addProgress = 0;
     }
     protected void downloadLibrary(DependentLibrary libItem,String libArtifact,File outLib) throws Throwable{
+        downloadLibrary(libItem, libArtifact, outLib, false);
+    }
+    protected void downloadLibrary(DependentLibrary libItem,String libArtifact,File outLib,boolean redirect) throws Throwable{
         publishProgress("1", mActivity.getString(R.string.mcl_launch_downloading, libItem.name));
         String libPathURL;
         boolean skipIfFailed = false;
@@ -304,6 +312,8 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
             System.out.println("UnkLib:"+libArtifact);
             MinecraftLibraryArtifact artifact = new MinecraftLibraryArtifact();
             artifact.url = (libItem.url == null ? "https://libraries.minecraft.net/" : libItem.url.replace("http://","https://")) + libArtifact;
+            if (redirect)
+                artifact.url = artifact.url.replace("http://", "https://").replace("https://libraries.minecraft.net", "https://dresources.ralsei.cf");
             libItem.downloads = new DependentLibrary.LibraryDownloads(artifact);
 
             skipIfFailed = true;
@@ -326,7 +336,7 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
                         }
                 );
                 if(libItem.downloads.artifact.sha1 != null) {
-                    isFileGood = LauncherPreferences.PREF_CHECK_LIBRARY_SHA ? Tools.compareSHA1(outLib,libItem.downloads.artifact.sha1) : true;
+                    isFileGood = (LauncherPreferences.PREF_CHECK_LIBRARY_SHA && !redirect) ? Tools.compareSHA1(outLib,libItem.downloads.artifact.sha1) : true;
                     if(!isFileGood) publishProgress("0", mActivity.getString(R.string.dl_library_sha_fail,libItem.name));
                     else publishProgress("0", mActivity.getString(R.string.dl_library_sha_pass,libItem.name));
                 }else{

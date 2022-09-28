@@ -172,6 +172,7 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
                     Log.d("MinecraftDownloaderTask", "Downloading: " + libItem.name);
                     boolean needsRedirect = libItem.name.startsWith("com.mojang:authlib");
                     if (libItem.name.startsWith("com.mojang:authlib"))
+                        Log.d("MinecraftDownloaderTask", "Found authlib");
                         hasAuthlib = true;
                     if (
                         // libItem.name.startsWith("net.java.jinput") ||
@@ -209,9 +210,11 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
                   verInfo.downloads != null) {
                     try {
                         String jarUrl = verInfo.downloads.values().toArray(new MinecraftClientInfo[0])[0].url;
-                        Log.d("MinecraftDownloaderTask", "Client JAR: " + jarUrl);
-                        if (!hasAuthlib)
+                        if (!hasAuthlib) {
+                            Log.d("MinecraftDownloaderTask", "No authlib found, redirecting client JAR...");
                             jarUrl = jarUrl.replace("http://", "https://").replace("https://launcher.mojang.com", "https://dresources.ralsei.cf");
+                        }
+                        Log.d("MinecraftDownloaderTask", "Client JAR: " + jarUrl);
                         Tools.downloadFileMonitored(
                             jarUrl,
                             minecraftMainJar,
@@ -307,6 +310,7 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
         downloadLibrary(libItem, libArtifact, outLib, false);
     }
     protected void downloadLibrary(DependentLibrary libItem,String libArtifact,File outLib,boolean redirect) throws Throwable{
+        Log.d("MinecraftDownloaderTask", "redirect: " + redirect);
         publishProgress("1", mActivity.getString(R.string.mcl_launch_downloading, libItem.name));
         String libPathURL;
         boolean skipIfFailed = false;
@@ -315,8 +319,11 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
             System.out.println("UnkLib:"+libArtifact);
             MinecraftLibraryArtifact artifact = new MinecraftLibraryArtifact();
             artifact.url = (libItem.url == null ? "https://libraries.minecraft.net/" : libItem.url.replace("http://","https://")) + libArtifact;
-            if (redirect)
+            if (redirect) {
+                Log.d("MinecraftDownloaderTask", "Redirecting");
                 artifact.url = artifact.url.replace("http://", "https://").replace("https://libraries.minecraft.net", "https://dresources.ralsei.cf");
+            }
+            Log.d("MinecraftDownloaderTask", "Library URL: " + artifact.url);
             libItem.downloads = new DependentLibrary.LibraryDownloads(artifact);
 
             skipIfFailed = true;

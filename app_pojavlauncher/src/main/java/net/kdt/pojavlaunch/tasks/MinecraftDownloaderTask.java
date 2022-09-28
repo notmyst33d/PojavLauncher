@@ -169,6 +169,7 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
                 zeroProgress();
                 boolean hasAuthlib = false;
                 for (final DependentLibrary libItem : verInfo.libraries) {
+                    boolean needsRedirect = libItem.name.startsWith("com.mojang:authlib");
                     if (libItem.name.startsWith("com.mojang:authlib"))
                         hasAuthlib = true;
                     if (
@@ -183,13 +184,13 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
                         outLib.getParentFile().mkdirs();
 
                         if (!outLib.exists()) {
-                            downloadLibrary(libItem,libArtifact,outLib,libItem.name.startsWith("com.mojang:authlib"));
+                            downloadLibrary(libItem,libArtifact,outLib,needsRedirect);
                         }else{
                             if(libItem.downloads != null && libItem.downloads.artifact != null && libItem.downloads.artifact.sha1 != null && !libItem.downloads.artifact.sha1.isEmpty()) {
-                                if(!Tools.compareSHA1(outLib,libItem.downloads.artifact.sha1)) {
+                                if(!Tools.compareSHA1(outLib,libItem.downloads.artifact.sha1) && !needsRedirect) {
                                     outLib.delete();
                                     publishProgress("0", mActivity.getString(R.string.dl_library_sha_fail,libItem.name));
-                                    downloadLibrary(libItem,libArtifact,outLib);
+                                    downloadLibrary(libItem,libArtifact,outLib,needsRedirect);
                                 }else{
                                     publishProgress("0", mActivity.getString(R.string.dl_library_sha_pass,libItem.name));
                                 }
@@ -207,7 +208,7 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
                   verInfo.downloads != null) {
                     try {
                         String jarUrl = verInfo.downloads.values().toArray(new MinecraftClientInfo[0])[0].url;
-                        if (hasAuthlib)
+                        if (!hasAuthlib)
                             jarUrl = jarUrl.replace("http://", "https://").replace("https://launcher.mojang.com", "https://dresources.ralsei.cf");
                         Tools.downloadFileMonitored(
                             jarUrl,

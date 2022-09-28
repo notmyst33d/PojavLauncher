@@ -171,9 +171,10 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
                 for (final DependentLibrary libItem : verInfo.libraries) {
                     Log.d("MinecraftDownloaderTask", "Downloading: " + libItem.name);
                     boolean needsRedirect = libItem.name.startsWith("com.mojang:authlib");
-                    if (libItem.name.startsWith("com.mojang:authlib"))
+                    if (libItem.name.startsWith("com.mojang:authlib")) {
                         Log.d("MinecraftDownloaderTask", "Found authlib");
                         hasAuthlib = true;
+                    }
                     if (
                         // libItem.name.startsWith("net.java.jinput") ||
                         libItem.name.startsWith("org.lwjgl")
@@ -319,17 +320,17 @@ public class MinecraftDownloaderTask extends AsyncTask<String, String, Throwable
             System.out.println("UnkLib:"+libArtifact);
             MinecraftLibraryArtifact artifact = new MinecraftLibraryArtifact();
             artifact.url = (libItem.url == null ? "https://libraries.minecraft.net/" : libItem.url.replace("http://","https://")) + libArtifact;
-            if (redirect) {
-                Log.d("MinecraftDownloaderTask", "Redirecting");
-                artifact.url = artifact.url.replace("http://", "https://").replace("https://libraries.minecraft.net", "https://dresources.ralsei.cf");
-            }
-            Log.d("MinecraftDownloaderTask", "Library URL: " + artifact.url);
             libItem.downloads = new DependentLibrary.LibraryDownloads(artifact);
 
             skipIfFailed = true;
         }
         try {
             libPathURL = libItem.downloads.artifact.url;
+            if (redirect) {
+                Log.d("MinecraftDownloaderTask", "Redirecting");
+                libPathURL = libPathURL.replace("http://", "https://").replace("https://libraries.minecraft.net", "https://dresources.ralsei.cf");
+            }
+            Log.d("MinecraftDownloaderTask", "Library URL: " + libPathURL);
             boolean isFileGood = false;
             byte timesChecked=0;
             while(!isFileGood) {

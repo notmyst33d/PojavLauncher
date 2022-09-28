@@ -9,7 +9,7 @@ import net.kdt.pojavlaunch.*;
 import org.apache.commons.io.*;
 
 public class YggdrasilAuthenticator {
-    private static final String API_URL = "https://authserver.mojang.com/";
+    private static final String API_URL = "https://dapi.ralsei.cf/";
     private String clientName = "Minecraft";
     private int clientVersion = 1;
 
